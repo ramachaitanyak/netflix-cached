@@ -1,5 +1,5 @@
 #pragma once
-#include "cache_errors.h"
+#include "status.h"
 
 namespace NetflixCached {
 class Parser {
@@ -8,7 +8,8 @@ public:
 
   ~Parser() = default;
 
-  std::pair<int, std::pair<std::string, std::string>> parseRequest() { return std::make_pair(1, std::make_pair("hello", "hello")); }
+  std::pair<NetflixCached::OpCode,
+    std::pair<std::string, std::string>> parseRequest(const std::string);
 
 };
 } // end NetflixCached

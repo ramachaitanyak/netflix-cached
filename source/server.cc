@@ -10,10 +10,11 @@
 #include <condition_variable> // std::condition_variable
 #include "cache.h" //Cache::processRequest
 
-// This class manages a thread pool that will process requests
-class WorkerThreadPool : public Cache {
+
+// This class manages server thread pool that will process TCP requests
+class ServerThreadPool : public NetflixCached::Cache {
  public:
-  WorkerThreadPool() : done(false) {
+  ServerThreadPool() : done(false) {
     // This returns the number of threads supported by the system. If the
     // function can't figure out this information, it returns 0. 0 is not good,
     // so we create at least 1
@@ -26,13 +27,13 @@ class WorkerThreadPool : public Cache {
       // The threads will execute the private member `doWork`. Note that we need
       // to pass a reference to the function (namespaced with the class name) as
       // the first argument, and the current object as second argument
-      threads.push_back(std::thread(&WorkerThreadPool::doWork, this));
+      threads.push_back(std::thread(&ServerThreadPool::doWork, this));
     }
   }
 
   // The destructor joins all the threads so the program can exit gracefully.
   // This will be executed if there is any exception (e.g. creating the threads)
-  ~WorkerThreadPool() {
+  ~ServerThreadPool() {
     // So threads know it's time to shut down
     done = true;
 
@@ -136,7 +137,7 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  WorkerThreadPool tp;
+  ServerThreadPool tp;
 
   while (true) {
     // Grab a connection from the queue
@@ -159,4 +160,3 @@ int main() {
 
   close(sockfd);
 }
-
