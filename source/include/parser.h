@@ -72,7 +72,7 @@ private:
     parseRequestType(const std::string& input);
 
   /*
-   * API to parse the payload of request
+   * API to parse 'set' payload of request
    * @param 'input', this is the network input excluding the request type, as this is
    *        invoked post 'parseRequestType'. The former API performs error checking and
    *        does not invoke the parsePayload API which is more expensive on errors.
@@ -83,5 +83,16 @@ private:
    */
   NetflixCached::Status parseSetPayload(const std::string input, ParsedPayload& payload);
 
+  /*
+   * API to parse 'get' payload of request
+   * @param 'input', this is the network input excluding the request type, as this is
+   *        invoked post 'parseRequestType'. The former API performs error checking and
+   *        does not invoke the parsePayload API which is more expensive on errors.
+   * @param 'parsed_payload', a reference to the ParsedPayload instance, which will be
+   *        populated during the call
+   * @return 'NetflixCached::Status', the status of the parsing errors to identify any error
+   *          upon no error 'Status::DEFAULT' is returned
+   */
+  NetflixCached::Status parseGetPayload(const std::string input, ParsedPayload& payload);
 };
 } // end NetflixCached

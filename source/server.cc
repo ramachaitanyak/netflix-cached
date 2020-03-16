@@ -16,14 +16,14 @@ class ServerThreadPool : public NetflixCached::Cache {
  public:
   ServerThreadPool() : done(false) {
     // This returns the number of threads supported by the system. If the
-    // function can't figure out this information, it returns 0. 0 is not good,
-    // so we create at least 1
-    auto numberOfThreads = std::thread::hardware_concurrency();
-    if (numberOfThreads == 0) {
-      numberOfThreads = 1;
+    // function can't figure out this information, it returns 0, instead return
+    // 1 thread
+    auto number_of_threads = std::thread::hardware_concurrency();
+    if (number_of_threads == 0) {
+      number_of_threads = 1;
     }
 
-    for (unsigned i = 0; i < numberOfThreads; ++i) {
+    for (unsigned i = 0; i < number_of_threads; ++i) {
       // The threads will execute the private member `doWork`. Note that we need
       // to pass a reference to the function (namespaced with the class name) as
       // the first argument, and the current object as second argument
@@ -38,7 +38,7 @@ class ServerThreadPool : public NetflixCached::Cache {
     done = true;
 
     // Wake up all the threads, so they can finish and be joined
-    workQueueConditionVariable.notify_all();
+    work_queue_condition_var.notify_all();
     for (auto& thread : threads) {
       if (thread.joinable()) {
         thread.join();
@@ -50,28 +50,28 @@ class ServerThreadPool : public NetflixCached::Cache {
   // that needs to be processed by the thread pool
   void queueWork(int fd, std::string& request) {
     // Grab the mutex
-    std::lock_guard<std::mutex> g(workQueueMutex);
+    std::lock_guard<std::mutex> g(work_queueMutex);
 
     // Push the request to the queue
-    workQueue.push(std::pair<int, std::string>(fd, request));
+    work_queue.push(std::pair<int, std::string>(fd, request));
 
     // Notify one thread that there are requests to process
-    workQueueConditionVariable.notify_one();
+    work_queue_condition_var.notify_one();
   }
 
  private:
   // This condition variable is used for the threads to wait until there is work
   // to do
-  std::condition_variable_any workQueueConditionVariable;
+  std::condition_variable_any work_queue_condition_var;
 
   // We store the threads in a vector, so we can later stop them gracefully
   std::vector<std::thread> threads;
 
-  // Mutex to protect workQueue
-  std::mutex workQueueMutex;
+  // Mutex to protect work_queue
+  std::mutex work_queueMutex;
 
   // Queue of requests waiting to be processed
-  std::queue<std::pair<int, std::string>> workQueue;
+  std::queue<std::pair<int, std::string>> work_queue;
 
   // This will be set to true when the thread pool is shutting down. This tells
   // the threads to stop looping and finish
@@ -85,15 +85,15 @@ class ServerThreadPool : public NetflixCached::Cache {
 
       // Create a scope, so we don't lock the queue for longer than necessary
       {
-        std::unique_lock<std::mutex> g(workQueueMutex);
-        workQueueConditionVariable.wait(g, [&]{
+        std::unique_lock<std::mutex> g(work_queueMutex);
+        work_queue_condition_var.wait(g, [&]{
           // Only wake up if there are elements in the queue or the program is
           // shutting down
-          return !workQueue.empty() || done;
+          return !work_queue.empty() || done;
         });
 
-        request = workQueue.front();
-        workQueue.pop();
+        request = work_queue.front();
+        work_queue.pop();
       }
 
       processRequest(request);
@@ -138,10 +138,10 @@ int main() {
 
     // Read from the connection
     char buffer[100];
-    auto bytesRead = read(connection, buffer, 100);
+    auto bytes_read = read(connection, buffer, 100);
     std::string req = buffer;
-    std::string request = req.substr(0, bytesRead);
-    std::cout << "Bytes read "<<bytesRead<<std::endl;
+    std::string request = req.substr(0, bytes_read);
+    std::cout << "Bytes read "<<bytes_read<<std::endl;
 
     // Add some work to the queue
     tp.queueWork(connection, request);

@@ -6,9 +6,14 @@ EXTRAARGS = -mavx2 -march=native
 LDFLAGS = -lpthread -lstdc++
 WARNINGS = -Wall -Wpedantic -Wextra -Werror
 CC ?= g++
+BIN = ./bin
 
 cache_server: server.o parser.o cache.o
-	$(CC) -o netflix_cache_server ../source/server.o parser.o cache.o -I./include -O0 -g $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS) 
+	$(shell mkdir -p $(BIN))
+	$(shell mv server.o $(BIN)/server.o)
+	$(shell mv parser.o $(BIN)/parser.o)
+	$(shell mv cache.o $(BIN)/cache.o)
+	$(CC) -o netflix_cache_server $(BIN)/server.o $(BIN)/parser.o $(BIN)/cache.o -I./include -O0 -g $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS) 
 
 server.o: server.cc
 	$(CC) -g -c server.cc -I./include -O0 $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS)
@@ -21,4 +26,4 @@ server.o: server.cc
 
 	
 clean:
-	rm -f *.o netflix_cache_server
+	rm -Rf $(BIN) netflix_cache_server
