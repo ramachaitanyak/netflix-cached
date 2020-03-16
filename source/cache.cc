@@ -18,9 +18,12 @@ Cache::processRequest(const std::pair<int, std::string> request) {
   //close(item.first);
   //
   std::string req = request.second;
+  std::cout<<"req "<<req;
+  std::cout<<"**************"<<std::endl;
 
   Parser parse_object;
-  std::pair<NetflixCached::OpCode, std::pair<std::string, std::string>>
+  std::pair<NetflixCached::OpCode,
+    std::pair<NetflixCached::Status, NetflixCached::ParsedPayload>>
     result = parse_object.parseRequest(req);
 }
 

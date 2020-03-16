@@ -99,18 +99,6 @@ class ServerThreadPool : public NetflixCached::Cache {
       processRequest(request);
     }
   }
-
-  void processRequest(const std::pair<int, std::string> item) {
-    // Pretend we are doing a lot of work
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-
-    // Send a message to the connection
-    std::string response = "Good talking to you\n";
-    send(item.first, response.c_str(), response.size(), 0);
-
-    // Close the connection
-    close(item.first);
-  }
 };
 
 int main() {
@@ -125,9 +113,9 @@ int main() {
   sockaddr_in sockaddr;
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_addr.s_addr = INADDR_ANY;
-  sockaddr.sin_port = htons(9999);
+  sockaddr.sin_port = htons(11211);
   if (bind(sockfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
-    std::cout << "Failed to bind to port 9999. errno: " << errno << std::endl;
+    std::cout << "Failed to bind to port 11211. errno: " << errno << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -151,7 +139,8 @@ int main() {
     // Read from the connection
     char buffer[100];
     auto bytesRead = read(connection, buffer, 100);
-    std::string request = buffer;
+    std::string req = buffer;
+    std::string request = req.substr(0, bytesRead);
     std::cout << "Bytes read "<<bytesRead<<std::endl;
 
     // Add some work to the queue
