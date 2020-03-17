@@ -22,6 +22,7 @@ class ServerThreadPool : public NetflixCached::Cache {
     if (number_of_threads == 0) {
       number_of_threads = 1;
     }
+    std::cout<<"total number of concurrent threads = "<<number_of_threads<<std::endl;
 
     for (unsigned i = 0; i < number_of_threads; ++i) {
       // The threads will execute the private member `doWork`. Note that we need

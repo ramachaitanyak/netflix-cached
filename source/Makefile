@@ -13,7 +13,7 @@ cache_server: server.o parser.o cache.o
 	$(shell mv server.o $(BIN)/server.o)
 	$(shell mv parser.o $(BIN)/parser.o)
 	$(shell mv cache.o $(BIN)/cache.o)
-	$(CC) -o netflix_cache_server $(BIN)/server.o $(BIN)/parser.o $(BIN)/cache.o -I./include -O0 -g $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS) 
+	$(CC) -o netflix_cache_server $(BIN)/server.o $(BIN)/parser.o $(BIN)/cache.o -I./include -O0 -g $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS)
 
 server.o: server.cc
 	$(CC) -g -c server.cc -I./include -O0 $(CPPVERFLAG) $(LDFLAGS) $(EXTRAARGS) $(WARNINGS)

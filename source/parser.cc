@@ -92,7 +92,8 @@ Parser::parseSetPayload(std::string input, ParsedPayload& payload) {
 
     // Check to see if the 'noreply' argument has been passed into the string
     // as this is optional. If this is not provided the remaining text_line is
-    // the payload length.
+    // the payload length after parsing out "\r\n"
+    text_line = text_line.substr(0, text_line.length() -2);
     if (text_line.compare("noreply") == 0) {
       payload.noreply = true;
       std::cout<<"payload noreplay true"<<std::endl;
@@ -100,7 +101,7 @@ Parser::parseSetPayload(std::string input, ParsedPayload& payload) {
       payload.noreply = false;
       std::cout<<"payload noreplay false"<<std::endl;
       //Acquire the length of unstructured data excluding "\r\n"
-      std::string length = text_line.substr(0, found_space);
+      std::string length = text_line;
       payload.length = std::stoi(length);
       std::cout<<"payload.length "<<payload.length<<"**"<<std::endl;
     }
@@ -115,14 +116,46 @@ Parser::parseSetPayload(std::string input, ParsedPayload& payload) {
     return NetflixCached::Status::CLIENT_ERROR;
   }
 
-  return Status::DEFAULT;
+  return NetflixCached::Status::DEFAULT;
+}
+
+NetflixCached::Status
+Parser::parseGetPayload(std::string text_line, ParsedPayload& payload) {
+  std::cout<<text_line<<std::endl;
+  std::string token = "\r\n";
+  std::string space_token = " ";
+  size_t found = text_line.find_first_of(token);
+  if (found == std::string::npos) {
+    // This is client input error
+    return NetflixCached::Status::CLIENT_ERROR;
+  } else {
+    size_t found_space = text_line.find_first_of(space_token);
+    while(found_space != std::string::npos) {
+      // There are more get keys to parse
+      std::string key = text_line.substr(0, found_space);
+      payload.get_keys.push_back(key);
+      text_line = text_line.substr(found_space + 1, text_line.length() - found_space);
+      found_space = text_line.find_first_of(space_token);
+    }
+    // Append the last get key to payload after parsing out "\r\n", if
+    // optional noreply is not passed
+    if (text_line.compare("noreply") == 0) {
+      payload.noreply = true;
+    } else {
+      payload.noreply = false;
+      std::string key = text_line.substr(0, text_line.length() -2);
+      payload.get_keys.push_back(key);
+    }
+  }
+
+  return NetflixCached::Status::DEFAULT;
 }
 
 std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached::ParsedPayload>>
   Parser::parseRequest(const std::string network_buffer_input) {
   ParsedPayload payload;
-  NetflixCached::Status status;
-  NetflixCached::OpCode op_code;
+  NetflixCached::Status status = Status::ERROR;
+  NetflixCached::OpCode op_code = OpCode::OK;
   std::cout<<network_buffer_input<<std::endl;
   // Identify the type of request. Since we are only supporting
   // 'get' and 'set'. The size of the request can not be more than
@@ -139,6 +172,14 @@ std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached:
   if (request_type.second == RequestType::SET) {
     // Parse the remaining portion of the request
     status = parseSetPayload(request, payload);
+    if (status != Status::DEFAULT) {
+      op_code = OpCode::ERROR;
+    }
+  }
+
+  if (request_type.second == RequestType::GET) {
+    // Parse the remaining portion of the request
+    status = parseGetPayload(request, payload);
     if (status != Status::DEFAULT) {
       op_code = OpCode::ERROR;
     }
