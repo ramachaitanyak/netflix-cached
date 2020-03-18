@@ -20,8 +20,8 @@ public:
   virtual void queueWork(int id, std::string& req) = 0;
 
 private:
-  void getKeyValues(int io_handle, NetflixCached::ParsedPayload& payload);
-  NetflixCached::Status setKeyValue(NetflixCached::ParsedPayload& payload);
+  void getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payload);
+  NetflixCached::Status setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload);
 
   class HashNode {
   public:

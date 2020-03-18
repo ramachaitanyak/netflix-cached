@@ -1,6 +1,7 @@
 #pragma once
 #include "status.h" // For NetflixCached::RequestType
 #include <vector> // For std::vector
+#include <memory> // For std::shared_ptr
 
 namespace NetflixCached {
 
@@ -47,13 +48,15 @@ public:
   std::string unstructured_data;
 };
 
+using ParsedPayloadSharedPtr = std::shared_ptr<ParsedPayload>;
+
 class Parser {
 public:
   Parser(){}
 
   ~Parser() = default;
 
-  std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached::ParsedPayload>>
+  std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached::ParsedPayloadSharedPtr>>
     parseRequest(const std::string);
 
 private:
@@ -81,7 +84,7 @@ private:
    * @return 'NetflixCached::Status', the status of the parsing errors to identify any error
    *          upon no error 'Status::DEFAULT' is returned
    */
-  NetflixCached::Status parseSetPayload(const std::string input, ParsedPayload& payload);
+  NetflixCached::Status parseSetPayload(const std::string input, ParsedPayloadSharedPtr& payload);
 
   /*
    * API to parse 'get' payload of request
@@ -93,6 +96,9 @@ private:
    * @return 'NetflixCached::Status', the status of the parsing errors to identify any error
    *          upon no error 'Status::DEFAULT' is returned
    */
-  NetflixCached::Status parseGetPayload(const std::string input, ParsedPayload& payload);
+  NetflixCached::Status parseGetPayload(const std::string input, ParsedPayloadSharedPtr& payload);
 };
+
+using ParserSharedPtr = std::shared_ptr<Parser>;
+
 } // end NetflixCached
