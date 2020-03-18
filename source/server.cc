@@ -51,7 +51,7 @@ class ServerThreadPool : public NetflixCached::Cache {
   // that needs to be processed by the thread pool
   void queueWork(int fd, std::string& request) {
     // Grab the mutex
-    std::lock_guard<std::mutex> g(work_queueMutex);
+    std::lock_guard<std::mutex> g(work_queue_mutex);
 
     // Push the request to the queue
     work_queue.push(std::pair<int, std::string>(fd, request));
@@ -69,7 +69,7 @@ class ServerThreadPool : public NetflixCached::Cache {
   std::vector<std::thread> threads;
 
   // Mutex to protect work_queue
-  std::mutex work_queueMutex;
+  std::mutex work_queue_mutex;
 
   // Queue of requests waiting to be processed
   std::queue<std::pair<int, std::string>> work_queue;
@@ -86,7 +86,7 @@ class ServerThreadPool : public NetflixCached::Cache {
 
       // Create a scope, so we don't lock the queue for longer than necessary
       {
-        std::unique_lock<std::mutex> g(work_queueMutex);
+        std::unique_lock<std::mutex> g(work_queue_mutex);
         work_queue_condition_var.wait(g, [&]{
           // Only wake up if there are elements in the queue or the program is
           // shutting down
@@ -147,6 +147,8 @@ int main() {
     // Add some work to the queue
     tp.queueWork(connection, request);
   }
+
+  std::cout<<"closing socket"<<std::endl;
 
   close(sockfd);
 }

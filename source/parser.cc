@@ -153,6 +153,7 @@ Parser::parseGetPayload(std::string text_line, ParsedPayload& payload) {
 
 std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached::ParsedPayload>>
   Parser::parseRequest(const std::string network_buffer_input) {
+    std::cout<<"Parse Request"<<std::endl;
   ParsedPayload payload;
   NetflixCached::Status status = Status::ERROR;
   NetflixCached::OpCode op_code = OpCode::OK;
@@ -179,6 +180,7 @@ std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached:
 
   if (request_type.second == RequestType::GET) {
     // Parse the remaining portion of the request
+    std::cout<<"got get"<<std::endl;
     status = parseGetPayload(request, payload);
     if (status != Status::DEFAULT) {
       op_code = OpCode::ERROR;
