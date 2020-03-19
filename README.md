@@ -14,9 +14,9 @@ For the scope of this program, the following simplifications are made from a ful
 
 ## Relevant Document References
 
-[Design and Functional specification Document] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
-* [Functional and Requirement Test Document] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
-* [Continuous Integration Pipeline for Maintainability] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+* [Design and Functional specification Document](https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+* [Functional and Requirement Test Document](https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+* [Continuous Integration Pipeline for Maintainability](https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
 
 
 ## Build & Test Instructions
@@ -44,19 +44,16 @@ gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~16.04~ppa1)
 
 ## References
 xxHash - Non cryptographic hashing algorithm used for hashing
-```
 * https://github.com/Cyan4973/xxHash
 * https://github.com/RedSpah/xxhash_cpp (xxHash for cpp)
-```
 
 Memcached text protocol
-```
 * https://github.com/memcached/memcached/blob/master/doc/protocol.txt
 * https://docs.oracle.com/cd/E17952_01/mysql-5.0-en/ha-memcached-interfaces-protocol.html
 * https://docs.oracle.com/cd/E17952_01/mysql-5.0-en/ha-memcached-interfaces-protocol.html#ha-memcached-interfaces-protocol-responses
-```
 
 Thread pool design patterns
-```
 * https://ncona.com/2019/05/using-thread-pools-in-cpp/
-```
+
+C++ Draft
+* http://eel.is/c++draft/ 
