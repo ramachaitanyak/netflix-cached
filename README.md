@@ -13,14 +13,11 @@ For the scope of this program, the following simplifications are made from a ful
 ```
 
 ## Relevant Document References
-```
-* Design and Functional specification Document
-  * https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing
-* Functional and Requirement Test Document
-  * <TBD>
-* Continuous Integration Pipeline for Maintainability
-  * <TBD>
-```
+
+[Design and Functional specification Document] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+* [Functional and Requirement Test Document] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+* [Continuous Integration Pipeline for Maintainability] (https://docs.google.com/document/d/1-re6c37zJBwAJtJ73bm5GlXK9Eqzm6wE3yluSmz2J2g/edit?usp=sharing)
+
 
 ## Build & Test Instructions
 To build `netflix_cache_server`, move into the source directory and invoke `make cache_server`. To remove any unecessary object files and the binary before rebuild run `make clean`
