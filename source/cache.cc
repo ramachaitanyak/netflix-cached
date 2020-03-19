@@ -3,8 +3,93 @@
 #include <sys/socket.h>
 #include "cache.h"
 #include <unistd.h> // For read
+#include <thread> // For std::this_thread::sleep_for
+#include <chrono> // For std::chrono::seconds
+#include <functional>
 
 namespace NetflixCached {
+
+void
+Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
+
+  if (evict_pq.size() < q_size) {
+    // Add a shallow copy of the node
+    evict_pq.push(node);
+    std::cout<<"Added key "<<node->key<<"to evict store"<<std::endl;
+  } else {
+    // Check the top of queue and if it is less than the current value
+    // add remove the top element from queue and add to queue
+    Cache::HashNode *q_elem = evict_pq.top();
+    if (node->last_accessed_time < q_elem->last_accessed_time) {
+      evict_pq.pop();
+      // Add a shallow copy of the node
+      evict_pq.push(node);
+    std::cout<<"Added key "<<node->key<<"to evict store"<<std::endl;
+    }
+  }
+
+  return;
+}
+
+void
+Cache::evictCache() {
+  std::cout<<"Evict cache thread has begun "<<std::endl;
+  // The eviction thread functions as a cron job
+  // For the sake of simplicity, it will sleep for 10 seconds and evict last 2
+  // least recently used elements.
+  // These values can be tuned based on need and performance.
+  int time_sleep = 20; // This is tunable
+  size_t queue_size = 2; // This is also tunable and used for evicting number of nodes
+  while (!done){  
+    std::this_thread::sleep_for (std::chrono::seconds(time_sleep));
+    std::cout<<"Evict thread woken up"<<std::endl;
+
+    // Iterate through the entire extent-store without locking to gather the
+    // elements for eviction
+    for (auto it=extent_store.begin(); it!=extent_store.end(); it++) {
+      // Try to add each element to the evict_pq
+      for (size_t i=0; i<it->second.size(); i++) {
+        addToEvictQueue(queue_size, it->second[i]);
+      }
+    }
+
+    // Evict the Cache::HashNode from the extent-store based on the items in
+    // evict priority queue. This operation needs to be done under the lock
+    while (evict_pq.size() != 0) {
+      Cache::HashNode *elem = evict_pq.top();
+      evict_pq.pop();
+      // Compute hash and find the key in the extent-store
+      xxh::hash_t<32> key = xxh::xxhash<32>(elem->key);
+      // Lock the extent-store for look-up and delete
+      {
+        std::lock_guard<std::mutex> guard(extent_store_mutex);
+        auto it = extent_store.find(key);
+        if (it != extent_store.end()) {
+          // Check if this is the only HashNode for this key
+          // In which case remove the key as well
+          if (it->second.size() == 1) {
+            std::cout<<"Evicted key "<<it->second[0]->key<<" from extent-store"<<std::endl;
+            delete it->second[0];
+            extent_store.erase(it);
+          } else {
+            // Remove the single Cache::HashNode from the vector
+            for (size_t i=0; i<it->second.size(); i++) {
+              if (elem->key.compare(it->second[i]->key) == 0) {
+                // CXX TODO!: Have an eviction mechanism to store nodes
+                std::cout<<"Evicted key "<<it->second[0]->key<<" from extent-store"<<std::endl;
+                delete it->second[i];
+                it->second.erase(it->second.begin()+(i-1));
+              }
+            }
+          } // if/else
+        }// find on extent-store
+      }// Lock guard for modifying the extent-store
+    }
+  }
+
+  return;
+
+}
 
 void
 Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payload) {
@@ -15,6 +100,9 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
   // (Ref: http://eel.is/c++draft/#containers)
   // With this there is no need to lock the extent_store on retrieving
   // the data.
+  //
+  // NB: Whenever an element is 'get' we need to update the corresponding
+  // last_accessed_time of the element
 
   // The response that will be sent out to the client
   std::string response;
@@ -39,6 +127,8 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
           if (hash_node != nullptr) {
             if (key.compare(hash_node->key) == 0) {
               // Found actual key, build appropriate response
+              // Update the last_accessed_time for the item inside the table
+              it->second[i]->last_accessed_time = std::time(nullptr);
               std::string collision_key_resp =
                 "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
                 " " + std::to_string(hash_node->exptime) + " " +
@@ -53,6 +143,8 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
         auto* hash_node = it->second[0];
         // Safety check before dereferencing a pointer
         if (hash_node != nullptr) {
+          // Update the last_access_time for the item inside the table
+          it->second[0]->last_accessed_time = std::time(nullptr);
           std::string collision_key_resp =
             "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
             " " + std::to_string(hash_node->exptime) + " " +

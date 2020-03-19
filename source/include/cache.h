@@ -5,6 +5,7 @@
 #include <mutex>          // For std::mutex
 #include "parser.h"       // For parser API
 #include "xxhash.h"       // For xxhash algorithm
+#include <queue>          // For std::priority_queue
 #define MAX_COMMAND_SIZE 2048 // Maximum text_line command size supported
 
 namespace NetflixCached {
@@ -16,9 +17,28 @@ namespace NetflixCached {
  */
 class Cache {
 public:
+  Cache():done(false){}
   ~Cache() = default;
+  /*
+   * API invoked by the server threads to process work
+   * @param a pair of the socket file descriptor and the string request
+   *        received on the network
+   */
   virtual void processRequest(const std::pair<int, std::string>);
+  /*
+   * API used by the inheriting ServerThreadPool interface to queue work
+   * to the server threads
+   * @param id is the socket file descriptor and req is the network request
+   */
   virtual void queueWork(int id, std::string& req) = 0;
+  /*
+   * API to evict least recently used items from extent-store
+   */
+  virtual void evictCache();
+
+  virtual void setDone() {
+    done = true;
+  }
 
 private:
   void getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payload);
@@ -47,6 +67,8 @@ private:
     time_t last_accessed_time;
   }; // class HashNode
 
+  void addToEvictQueue(size_t& queue_size, Cache::HashNode* node);
+
   // Actual data-structure to hold all keys in memory. This is based on
   // the standard library and uses std::hash function on the key, thus by
   // reducing the collision probability.
@@ -58,5 +80,20 @@ private:
 
   // Mutex to protect the extent_store
   std::mutex extent_store_mutex;
+
+  // Using lambda to compare elements of the 
+  //auto cmp = [] (Cache::HashNode* left, Cache::HashNode* right) {
+  //  return left->last_accessed_time < right->last_accessed_time;
+ // };
+  struct Cmp {
+    bool operator()(Cache::HashNode* lhs, Cache::HashNode* rhs) {
+      return lhs->last_accessed_time < rhs->last_accessed_time;
+    }
+  };
+  std::priority_queue<Cache::HashNode*, std::vector<Cache::HashNode*>, Cmp > evict_pq;
+
+  // Variable to indicate graceful shutdown from the server
+  bool done;
+
 }; // class Cache
 } // end NetflixCached

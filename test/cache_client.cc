@@ -8,12 +8,14 @@
 #include <string>
 #include <iostream>
 #include <poll.h>
+#include <thread> // For std::this_thread::sleep_for
+#include <chrono> // For std::chrono::seconds
 #define PORT 11211
 
 int main()
 { 
     int total_tests_passed = 0;
-    int total_tests = 7;
+    int total_tests = 8;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
@@ -406,6 +408,39 @@ int main()
         total_tests_passed++;
       } else {
         std::cout<<"===== Testcase 7 Failed ====="<<std::endl;
+      }
+    }
+
+    {
+      /*
+       * Testcase 8: test cache eviction
+       * Expected Result: The current eviction time is 20 seconds.
+       *                  Therefore, after sleeping for 20 seconds,
+       *                  the first key 'xyzkey' added in Testcase 1
+       *                  should not be found
+       *
+       */
+      std::string get_request = "get xyzkey\r\n";
+      std::string expected_response = "END\r\n";
+      std::cout<<"===== Testcase 8 ====="<<std::endl;
+      std::cout<<"Test get on evicted key-value pair"<<std::endl;
+      std::cout<<"Sleep for 20 seconds which is when the eviction timer sets up"<<std::endl;
+      std::this_thread::sleep_for (std::chrono::seconds(20));
+      std::cout<<"Request sent to server :"<<std::endl;
+      std::cout<<get_request;
+      send(sock , get_request.c_str(), get_request.size() , 0);
+      memset(buffer, 0, sizeof(buffer));
+      valread = read( sock , buffer, 1024);
+      std::string response = buffer;
+      response = response.substr(0, valread);
+      std::cout<<"Response received from the server :"<<std::endl;
+      std::cout<<response;
+
+      if (response.compare(expected_response) == 0) {
+        std::cout<<"===== Testcase 8 Passed ====="<<std::endl;
+        total_tests_passed++;
+      } else {
+        std::cout<<"===== Testcase 8 Failed ====="<<std::endl;
       }
     }
 

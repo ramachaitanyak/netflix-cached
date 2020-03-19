@@ -17,19 +17,22 @@ class ServerThreadPool : public NetflixCached::Cache {
   ServerThreadPool() : done(false) {
     // This returns the number of threads supported by the system. If the
     // function can't figure out this information, it returns 0, instead return
-    // 1 thread
+    // 2 threads, one atleast to run eviction and other for actual work
     auto number_of_threads = std::thread::hardware_concurrency();
     if (number_of_threads == 0) {
-      number_of_threads = 1;
+      number_of_threads = 2;
     }
     std::cout<<"total number of concurrent threads = "<<number_of_threads<<std::endl;
 
-    for (unsigned i = 0; i < number_of_threads; ++i) {
+    for (unsigned i = 0; i < number_of_threads-1; ++i) {
       // The threads will execute the private member `doWork`. Note that we need
       // to pass a reference to the function (namespaced with the class name) as
       // the first argument, and the current object as second argument
       threads.push_back(std::thread(&ServerThreadPool::doWork, this));
     }
+
+    //eviction_thread = std::thread(&Cache::evictCache, this);
+    threads.push_back(std::thread(&Cache::evictCache, this));
   }
 
   // The destructor joins all the threads so the program can exit gracefully.
@@ -37,6 +40,9 @@ class ServerThreadPool : public NetflixCached::Cache {
   ~ServerThreadPool() {
     // So threads know it's time to shut down
     done = true;
+
+    // Also indicate to the caching infrastructure that it's time to shutdown
+    this->setDone();
 
     // Wake up all the threads, so they can finish and be joined
     work_queue_condition_var.notify_all();
@@ -67,6 +73,8 @@ class ServerThreadPool : public NetflixCached::Cache {
 
   // We store the threads in a vector, so we can later stop them gracefully
   std::vector<std::thread> threads;
+
+  std::thread eviction_thread;
 
   // Mutex to protect work_queue
   std::mutex work_queue_mutex;
