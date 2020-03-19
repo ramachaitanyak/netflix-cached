@@ -55,6 +55,21 @@ Parser::parseSetPayload(std::string input, ParsedPayloadSharedPtr& payload) {
 
       if (iterator_index == 0) {
         std::string key = text_line.substr(0, found_space);
+        // Validate key features before setting the key
+        // 1. Key can not be of size more than 250 bytes/characters
+        // 2. Key can not contain any control characters
+        if (key.length() > 250) {
+          return NetflixCached::Status::CLIENT_ERROR;
+        }
+        bool is_control = false;
+        for (size_t i = 0; i<key.length(); i++) {
+          if (iscntrl(key[i])) {
+            is_control = true;
+          }
+        }
+        if (is_control){
+          return NetflixCached::Status::CLIENT_ERROR;
+        }
         payload->set_key = key;
         std::cout<<"payload->set_key "<<payload->set_key<<"**"<<std::endl;
       }

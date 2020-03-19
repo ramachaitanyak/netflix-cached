@@ -5,6 +5,7 @@
 #include <mutex>          // For std::mutex
 #include "parser.h"       // For parser API
 #include "xxhash.h"       // For xxhash algorithm
+#define MAX_COMMAND_SIZE 2048 // Maximum text_line command size supported
 
 namespace NetflixCached {
 /*

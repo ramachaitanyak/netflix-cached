@@ -204,8 +204,8 @@ Cache::processRequest(const std::pair<int, std::string> request) {
 
   // Continue to read from socket
   std::cout<<"Continuing to read from socket"<<std::endl;
-  char buffer[100];
-  auto bytes_read = read(request.first,buffer,100);
+  char buffer[MAX_COMMAND_SIZE];
+  auto bytes_read = read(request.first,buffer, MAX_COMMAND_SIZE);
   std::cout<<"bytes_read"<<bytes_read<<std::endl;
   std::string req = buffer;
   std::string new_request = req.substr(0, bytes_read);

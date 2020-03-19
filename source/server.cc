@@ -138,8 +138,8 @@ int main() {
     }
 
     // Read from the connection
-    char buffer[100];
-    auto bytes_read = read(connection, buffer, 100);
+    char buffer[MAX_COMMAND_SIZE];
+    auto bytes_read = read(connection, buffer, MAX_COMMAND_SIZE);
     std::string req = buffer;
     std::string request = req.substr(0, bytes_read);
     std::cout << "Bytes read "<<bytes_read<<std::endl;

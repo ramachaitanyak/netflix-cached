@@ -12,6 +12,8 @@
 
 int main()
 { 
+    int total_tests_passed = 0;
+    int total_tests = 7;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
@@ -58,6 +60,7 @@ int main()
       std::cout<<response;
       if (response.compare(expected_response) == 0) {
         std::cout<<"===== Testcase 1 Passed ====="<<std::endl;
+        total_tests_passed++;
       } else {
         std::cout<<"===== Testcase 1 Failed ====="<<std::endl;
       }
@@ -86,6 +89,7 @@ int main()
 
       if (response.compare(expected_response) == 0) {
         std::cout<<"===== Testcase 2 Passed ====="<<std::endl;
+        total_tests_passed++;
       } else {
         std::cout<<"===== Testcase 2 Failed ====="<<std::endl;
       }
@@ -156,6 +160,7 @@ int main()
       std::cout<<response;
       if (response.compare(expected_response) == 0) {
         std::cout<<"===== Testcase 3 Passed ====="<<std::endl;
+        total_tests_passed++;
       } else {
         std::cout<<"===== Testcase 3 Failed ====="<<std::endl;
       }
@@ -297,6 +302,7 @@ int main()
 
         if (response.compare(expected_get_response) == 0) {
           std::cout<<"===== Testcase 4 Passed ====="<<std::endl;
+          total_tests_passed++;
         } else {
           std::cout<<"===== Testcase 4 Failed ====="<<std::endl;
         }
@@ -324,6 +330,7 @@ int main()
 
       if (response.compare(expected_response) == 0) {
         std::cout<<"===== Testcase 5 Passed ====="<<std::endl;
+        total_tests_passed++;
       } else {
         std::cout<<"===== Testcase 5 Failed ====="<<std::endl;
       }
@@ -366,6 +373,7 @@ int main()
         std::cout<<bad_response;
         if (bad_response.compare(bad_expected_response) == 0) {
           std::cout<<"===== Testcase 6 Passed ====="<<std::endl;
+          total_tests_passed++;
         } else {
           std::cout<<"===== Testcase 6 Failed ====="<<std::endl;
         }
@@ -373,6 +381,37 @@ int main()
         std::cout<<"===== Testcase 6 Failed ====="<<std::endl;
       }
     }
+
+    {
+      /*
+       * Testcase 7: test key with control characters
+       * Expected Result: Server returns CLIENT_ERROR on key with control
+       *                  characters
+       */
+      std::cout<<"===== Testcase 7 ====="<<std::endl;
+      std::cout<<"Test key with control characters"<<std::endl;
+      std::string control_key_command = "set key1\tq 0 0 1\r\nd\r\n";
+      std::string control_key_response = "CLIENT_ERROR\r\n";
+      std::cout<<"Request sent to server :"<<std::endl;
+      std::cout<<control_key_command;
+      send(sock, control_key_command.c_str(), control_key_command.size(), 0);
+      memset(buffer, 0, sizeof(buffer));
+      valread = read(sock, buffer, 1024);
+      std::string bad_response = buffer;
+      bad_response = bad_response.substr(0, valread);
+      std::cout<<"Response received from the server :"<<std::endl;
+      std::cout<<bad_response;
+      if (bad_response.compare(control_key_response) == 0) {
+        std::cout<<"===== Testcase 7 Passed ====="<<std::endl;
+        total_tests_passed++;
+      } else {
+        std::cout<<"===== Testcase 7 Failed ====="<<std::endl;
+      }
+    }
+
+    std::cout<<"------------------------------------------"<<std::endl;
+    std::cout<<total_tests_passed<<"/"<<total_tests<<" tests passed"<<std::endl;
+    std::cout<<"------------------------------------------"<<std::endl;
 
     return 0; 
 } 
