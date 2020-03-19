@@ -8,6 +8,7 @@ std::pair<NetflixCached::OpCode, NetflixCached::RequestType>
 
   // The requests are delimited by a " " (space) character
   // Command names are lower-case and are case-sensitive.
+  std::cout<<"parsing request type"<<std::endl;
   std::string request;
   std::string token = " ";
   size_t found = input.find_first_of(token);
@@ -24,6 +25,7 @@ std::pair<NetflixCached::OpCode, NetflixCached::RequestType>
 
   // Since only 'get' and 'set' are currently supported,
   // return error on all other cases
+  std::cout<<"parsing request type error for tests"<<std::endl;
   return std::make_pair(OpCode::ERROR, RequestType::NOT_SUPPORTED);
 }
 
@@ -93,7 +95,8 @@ Parser::parseSetPayload(std::string input, ParsedPayloadSharedPtr& payload) {
     // Check to see if the 'noreply' argument has been passed into the string
     // as this is optional. If this is not provided the remaining text_line is
     // the payload length after parsing out "\r\n"
-    text_line = text_line.substr(0, text_line.length() -2);
+    text_line = text_line.substr(0, text_line.length());
+    std::cout<<"text_line "<<text_line<<std::endl;
     if (text_line.compare("noreply") == 0) {
       payload->noreply = true;
       std::cout<<"payload noreplay true"<<std::endl;
@@ -136,16 +139,10 @@ Parser::parseGetPayload(std::string text_line, ParsedPayloadSharedPtr& payload) 
       payload->get_keys.push_back(key);
       text_line = text_line.substr(found_space + 1, text_line.length() - found_space);
       found_space = text_line.find_first_of(space_token);
+      std::cout<<"key "<<key<<std::endl;
     }
-    // Append the last get key to payload after parsing out "\r\n", if
-    // optional noreply is not passed
-    if (text_line.compare("noreply") == 0) {
-      payload->noreply = true;
-    } else {
-      payload->noreply = false;
-      std::string key = text_line.substr(0, text_line.length() -2);
-      payload->get_keys.push_back(key);
-    }
+    //Append the last get key
+    payload->get_keys.push_back(text_line.substr(0,text_line.length() - 2));
   }
 
   return NetflixCached::Status::DEFAULT;
@@ -168,7 +165,7 @@ std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached:
     return std::make_pair(request_type.first, std::make_pair(Status::ERROR, payload));
   }
 
-  std::string request = network_buffer_input.substr(4, network_buffer_input.length());
+  std::string request = network_buffer_input.substr(4, network_buffer_input.length()-4);
   payload->request_type = request_type.second;
 
   if (request_type.second == RequestType::SET) {

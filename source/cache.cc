@@ -42,7 +42,7 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
               std::string collision_key_resp =
                 "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
                 " " + std::to_string(hash_node->exptime) + " " +
-                std::to_string(hash_node->length) + " \r\n";
+                std::to_string(hash_node->length) + "\r\n";
               std::string collision_key_val = hash_node->unstructured_data;
               response = response + collision_key_resp + collision_key_val;
             }
@@ -56,7 +56,7 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
           std::string collision_key_resp =
             "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
             " " + std::to_string(hash_node->exptime) + " " +
-            std::to_string(hash_node->length) + " \r\n";
+            std::to_string(hash_node->length) + "\r\n";
           std::string collision_key_val = hash_node->unstructured_data;
           response = response + collision_key_resp + collision_key_val;
         }
@@ -65,7 +65,8 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
   }
   // Append "END\r\n" to the response and send to client
   response = response + "END\r\n";
-  send(io_handle, response.c_str(), response.size(), 0);
+  size_t bytes = send(io_handle, response.c_str(), response.size(), 0);
+  std::cout<<"bytes sent "<<bytes<<std::endl;
 }
 
 NetflixCached::Status
@@ -170,9 +171,17 @@ Cache::processRequest(const std::pair<int, std::string> request) {
         } else {
           return_status.clear();
           return_status = "STORED";
-          // Append "\r\n" to the return_status and send to client
+        }
+        if (!payload->noreply) {
+          // Append "\r\n" to the return_status and send to client only if
+          // noreply is not specified
           return_status = return_status + "\r\n";
           send(request.first, return_status.c_str(), return_status.size(), 0);
+        } else {
+          // Append "\r\n" to the return_status and send to client only if
+          // noreply is not specified
+          return_status = return_status + "\r\n";
+          send(request.first, return_status.c_str(), 0, 0);
         }
         break;
       case NetflixCached::RequestType::NOT_SUPPORTED:
