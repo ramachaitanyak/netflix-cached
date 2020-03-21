@@ -21,14 +21,31 @@ For the scope of this program, the following simplifications are made from a ful
 
 ## Build & Test Instructions
 ```
-* To build `netflix_cache_server`, move into the source directory and invoke `make cache_server`. 
-* To remove any unecessary object files and the binary before rebuild run `make clean`
+* To build `netflix_cache_server`
+  - cd ./source
+  - make cache_server
+* To remove any unecessary object files and the binary before rebuild
+  - cd ./source
+  - make clean
 
-* To build the test_cache_client, move into the test directory and invoke `make cache_client`. 
-* To remove objects run `make clean` from the test directory.
+* To build the test_cache_client
+  - cd ./test
+  - make cache_client 
+* To remove test client
+  - cd ./test
+  - make clean
 ```
 
-> NB: `test_cache_client` only works when there is a `netflix_cache_server` running. To run tests, please run `netflix_cache_server` first before running `test_cache_client`
+> NB 1: `test_cache_client` only works when there is a `netflix_cache_server` running. To run tests, please run `netflix_cache_server` first before running `test_cache_client`
+> NB 2: The release versions of `netflix_cache_server` and `test_cache_client` are compiled and pre-built for use
+
+Usage
+```
+* Start cache server
+  - ./release/netflix_cache_server [optional-port]
+* Start the test client within 20 seconds on starting cache server
+  - ./release/test_cache_client [optional-port]
+```
 
 ## Data Size Limits
 This project only supports text commands of maximum size 5120 bytes. The key can not have control characters and is limited to a size of 250 characters.
