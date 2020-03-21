@@ -1,0 +1,12 @@
+# This Document outlines the identified remainder of work with some nice to haves
+
+1. Handle logging infrastructure to record events and help debugging
+2. Introduce signal handling infrastructure to gracefully handle SIGINT, SIGPIPE etc.
+   * SIGPIPE or Broken Pipe error is generated when the server writes on a socket that has been
+     closed. This can happend when the client sends a request and closes the client socket
+     without waiting for reply from the server
+3. Handle graceful shutdown where the server can be shutdown by draining any requests and flushing
+   in-memory meta-data to disk.
+4. Implement an infrastructure to re-cycle and clean stale client sockets. This will reduce the
+   memory foot-print on the server
+
