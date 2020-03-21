@@ -15,7 +15,6 @@ Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
   if (evict_pq.size() < q_size) {
     // Add a shallow copy of the node
     evict_pq.push(node);
-    std::cout<<"Added key "<<node->key<<"to evict store"<<std::endl;
   } else {
     // Check the top of queue and if it is less than the current value
     // add remove the top element from queue and add to queue
@@ -24,7 +23,6 @@ Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
       evict_pq.pop();
       // Add a shallow copy of the node
       evict_pq.push(node);
-    std::cout<<"Added key "<<node->key<<"to evict store"<<std::endl;
     }
   }
 
@@ -33,7 +31,6 @@ Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
 
 void
 Cache::evictCache() {
-  std::cout<<"Evict cache thread has begun "<<std::endl;
   // The eviction thread functions as a cron job
   // For the sake of simplicity, it will sleep for 10 seconds and evict last 2
   // least recently used elements.
@@ -42,7 +39,8 @@ Cache::evictCache() {
   size_t queue_size = 2; // This is also tunable and used for evicting number of nodes
   while (!done){  
     std::this_thread::sleep_for (std::chrono::seconds(time_sleep));
-    std::cout<<"Evict thread woken up"<<std::endl;
+    std::cout<<"Received total "<<total_gets<<" get requests"<<std::endl;
+    std::cout<<"Received total "<<total_sets<<" set requests"<<std::endl;
 
     // Iterate through the entire extent-store without locking to gather the
     // elements for eviction
@@ -68,7 +66,6 @@ Cache::evictCache() {
           // Check if this is the only HashNode for this key
           // In which case remove the key as well
           if (it->second.size() == 1) {
-            std::cout<<"Evicted key "<<it->second[0]->key<<" from extent-store"<<std::endl;
             delete it->second[0];
             extent_store.erase(it);
           } else {
@@ -76,7 +73,6 @@ Cache::evictCache() {
             for (size_t i=0; i<it->second.size(); i++) {
               if (elem->key.compare(it->second[i]->key) == 0) {
                 // CXX TODO!: Have an eviction mechanism to store nodes
-                std::cout<<"Evicted key "<<it->second[0]->key<<" from extent-store"<<std::endl;
                 delete it->second[i];
                 it->second.erase(it->second.begin()+(i-1));
               }
@@ -93,6 +89,9 @@ Cache::evictCache() {
 
 void
 Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payload) {
+  // This value is for performance book-keeping, increment total_gets
+  // to represent the total number of get requests received
+  total_gets++;
 
   // STL standard containers like 'unordered_map' which is used as the
   // extent_store guarantees multiple threads reading at the same time
@@ -157,12 +156,14 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
   }
   // Append "END\r\n" to the response and send to client
   response = response + "END\r\n";
-  size_t bytes = send(io_handle, response.c_str(), response.size(), 0);
-  std::cout<<"bytes sent "<<bytes<<std::endl;
+  send(io_handle, response.c_str(), response.size(), 0);
 }
 
 NetflixCached::Status
 Cache::setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload) {
+  // This value is for performance book-keeping, increment total_gets
+  // to represent the total number of set requests received
+  total_sets++;
   // Allocate memory for a new HashNode before adding to the
   // extent-store
   Cache::HashNode *node = new Cache::HashNode();
@@ -234,7 +235,6 @@ Cache::processRequest(const std::pair<int, std::string> request) {
       default:
           break;
     }
-    std::cout<<"sending error"<<std::endl;
     // Append "\r\n" to the return_status and send to client
     return_status = return_status + "\r\n";
     send(request.first, return_status.c_str(), return_status.size(), 0);
@@ -249,7 +249,6 @@ Cache::processRequest(const std::pair<int, std::string> request) {
         // reply to the client through the Cache::getKeyValue API
         // by passing the socket file descriptor associated with the
         // client into it
-        std::cout<<"Get message recev"<<std::endl;
         getKeyValues(request.first, payload);
         break;
       case NetflixCached::RequestType::SET:
@@ -295,13 +294,10 @@ Cache::processRequest(const std::pair<int, std::string> request) {
   }
 
   // Continue to read from socket
-  std::cout<<"Continuing to read from socket"<<std::endl;
   char buffer[MAX_COMMAND_SIZE];
   auto bytes_read = read(request.first,buffer, MAX_COMMAND_SIZE);
-  std::cout<<"bytes_read"<<bytes_read<<std::endl;
   std::string req = buffer;
   std::string new_request = req.substr(0, bytes_read);
-  std::cout<<"new_req "<<new_request<<std::endl;
   if (bytes_read > 0) {
     this->queueWork(request.first, new_request);
   }

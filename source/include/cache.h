@@ -6,7 +6,7 @@
 #include "parser.h"       // For parser API
 #include "xxhash.h"       // For xxhash algorithm
 #include <queue>          // For std::priority_queue
-#define MAX_COMMAND_SIZE 2048 // Maximum text_line command size supported
+#define MAX_COMMAND_SIZE 5120 // Maximum text_line command size supported
 
 namespace NetflixCached {
 /*
@@ -17,7 +17,7 @@ namespace NetflixCached {
  */
 class Cache {
 public:
-  Cache():done(false){}
+  Cache():done(false), total_gets(0), total_sets(0){}
   ~Cache() = default;
   /*
    * API invoked by the server threads to process work
@@ -94,6 +94,10 @@ private:
 
   // Variable to indicate graceful shutdown from the server
   bool done;
+
+  // Statistics information for performance measurements
+  int total_gets;
+  int total_sets;
 
 }; // class Cache
 } // end NetflixCached
