@@ -20,24 +20,27 @@ For the scope of this program, the following simplifications are made from a ful
 
 
 ## Build & Test Instructions
-To build `netflix_cache_server`, move into the source directory and invoke `make cache_server`. To remove any unecessary object files and the binary before rebuild run `make clean`
+```
+* To build `netflix_cache_server`, move into the source directory and invoke `make cache_server`. 
+* To remove any unecessary object files and the binary before rebuild run `make clean`
 
-To build the test_cache_client, move into the test directory and invoke `make cache_client`. To remove objects run `make clean` from the test directory.
-
+* To build the test_cache_client, move into the test directory and invoke `make cache_client`. 
+* To remove objects run `make clean` from the test directory.
+```
 > NB: `test_cache_client` only works when there is a `netflix_cache_server` running. To run tests, please run `netflix_cache_server` first before running `test_cache_client`
 
 ## Data Size Limits
-This project only supports text commands of maximum size 2048 bytes. The key can not have control characters and is limited to a size of 250 characters.
+This project only supports text commands of maximum size 5120 bytes. The key can not have control characters and is limited to a size of 250 characters.
 
 ## Performance Measurments
-Tool used : memcslap `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux
+Tool used : memcslap `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux [memcslap](https://manpages.debian.org/jessie/libmemcached-tools/memcslap.1.en.html)
+```
 Usage
-```
 memcslap -s 127.0.0.1:11211 --test get/set
-```
 
 10000 sets of 4096 bytes of unstrcutured data took 0.717 seconds approximately
 10000 gets on those keys took 0.257 seconds approximately
+'''
 
 ## Compatibility, Development and Test Environment
 Linux Version
