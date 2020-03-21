@@ -36,12 +36,26 @@ public:
    */
   virtual void evictCache();
 
+  /*
+   * API to indicate shutdown to caching infrastructure
+   */
   virtual void setDone() {
     done = true;
   }
 
 private:
+  /*
+   * API for retrieving the unstructured data based on the key/keys present in
+   * 'payload' instance. This API also directly responds to the client
+   * @param io_handle is the socket descriptor to respond client get request
+   * @param payload is an instance containing the parsed key/keys from the request
+   */
   void getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payload);
+  /*
+   * API for setting the key-value pairs into the extent-store based on the parsed
+   * client request
+   * @param payload the parsed client set request
+   */
   NetflixCached::Status setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload);
 
   class HashNode {

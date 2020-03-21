@@ -12,8 +12,15 @@
 #include <chrono> // For std::chrono::seconds
 #define PORT 11211
 
-int main()
-{ 
+int main(int argc, char** argv)
+{
+    // Default server port
+    uint16_t server_port = PORT;
+    // Parse command line to see if there is optional port
+    // number specified
+    if (argc == 2) {
+        server_port = atoi(argv[1]);
+    }
     int total_tests_passed = 0;
     int total_tests = 8;
     int sock = 0, valread;
@@ -26,7 +33,7 @@ int main()
     }
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(server_port);
 
     // Convert IPv4 and IPv6 addresses from text to binary form
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
