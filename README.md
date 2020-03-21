@@ -27,6 +27,7 @@ For the scope of this program, the following simplifications are made from a ful
 * To build the test_cache_client, move into the test directory and invoke `make cache_client`. 
 * To remove objects run `make clean` from the test directory.
 ```
+
 > NB: `test_cache_client` only works when there is a `netflix_cache_server` running. To run tests, please run `netflix_cache_server` first before running `test_cache_client`
 
 ## Data Size Limits
@@ -40,7 +41,7 @@ memcslap -s 127.0.0.1:11211 --test get/set
 
 10000 sets of 4096 bytes of unstrcutured data took 0.717 seconds approximately
 10000 gets on those keys took 0.257 seconds approximately
-'''
+```
 
 ## Compatibility, Development and Test Environment
 Linux Version
