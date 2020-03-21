@@ -1,5 +1,5 @@
 # netflix-cached
-Netflix Caching Server
+A memcached like caching server
 
 ## Introduction
 The goal of this program is to create a high-performance concurrent memcached-like server.
@@ -34,7 +34,7 @@ For the scope of this program, the following simplifications are made from a ful
 This project only supports text commands of maximum size 5120 bytes. The key can not have control characters and is limited to a size of 250 characters.
 
 ## Performance Measurments
-Tool used : memcslap `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux [memcslap](https://manpages.debian.org/jessie/libmemcached-tools/memcslap.1.en.html)
+Tool used : `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux [memcslap](https://manpages.debian.org/jessie/libmemcached-tools/memcslap.1.en.html)
 ```
 Usage
 memcslap -s 127.0.0.1:11211 --test get/set
@@ -51,10 +51,11 @@ Linux vm-2997079 4.4.0-143-generic #169-Ubuntu SMP Thu Feb 7 07:56:38 UTC 2019 x
 g++ compiler version
 ```
 Thread model: posix
-gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~16.04~ppa1) 
+gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~16.04~ppa1)
 ```
-
 > NB: The minimum requirement to build the project is to have a gcc version of 7 or higher; please update g++ if running into any errors
+
+[Upgrade Instructions](https://tuxamito.com/wiki/index.php/Installing_newer_GCC_versions_in_Ubuntu)
 
 ## References
 xxHash - Non cryptographic hashing algorithm used for hashing
