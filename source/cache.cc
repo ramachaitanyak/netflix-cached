@@ -39,8 +39,6 @@ Cache::evictCache() {
   size_t queue_size = 2; // This is also tunable and used for evicting number of nodes
   while (!done){  
     std::this_thread::sleep_for (std::chrono::seconds(time_sleep));
-    std::cout<<"Received total "<<total_gets<<" get requests"<<std::endl;
-    std::cout<<"Received total "<<total_sets<<" set requests"<<std::endl;
 
     // Iterate through the entire extent-store without locking to gather the
     // elements for eviction

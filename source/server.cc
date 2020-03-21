@@ -10,6 +10,7 @@
 #include <condition_variable> // std::condition_variable
 #include "cache.h" //Cache::processRequest
 
+#define SERVER_DEFAULT_PORT 11211
 
 // This class manages server thread pool that will process TCP requests
 class ServerThreadPool : public NetflixCached::Cache {
@@ -109,7 +110,17 @@ class ServerThreadPool : public NetflixCached::Cache {
   }
 };
 
-int main() {
+int main(int argc, char** argv) {
+
+  // server port
+  uint16_t server_port = SERVER_DEFAULT_PORT;
+
+  // Check if there is another port provided to the server
+  // if so use that instead of SERVER_DEFAULT_PORT
+  if (argc == 2) {
+    server_port = atoi(argv[1]);
+  }
+
   // Create a socket
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd == 0) {
@@ -121,7 +132,7 @@ int main() {
   sockaddr_in sockaddr;
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_addr.s_addr = INADDR_ANY;
-  sockaddr.sin_port = htons(11211);
+  sockaddr.sin_port = htons(server_port);
   if (bind(sockfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
     std::cout << "Failed to bind to port 11211. errno: " << errno << std::endl;
     exit(EXIT_FAILURE);
@@ -149,7 +160,6 @@ int main() {
     auto bytes_read = read(connection, buffer, MAX_COMMAND_SIZE);
     std::string req = buffer;
     std::string request = req.substr(0, bytes_read);
-    std::cout << "Bytes read "<<bytes_read<<std::endl;
 
     // Add some work to the queue
     tp.queueWork(connection, request);
