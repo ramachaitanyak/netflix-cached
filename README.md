@@ -37,6 +37,7 @@ For the scope of this program, the following simplifications are made from a ful
 ```
 
 > NB 1: `test_cache_client` only works when there is a `netflix_cache_server` running. To run tests, please run `netflix_cache_server` first before running `test_cache_client`
+
 > NB 2: The release versions of `netflix_cache_server` and `test_cache_client` are compiled and pre-built for use
 
 Usage
