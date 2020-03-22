@@ -150,7 +150,6 @@ Parser::parseGetPayload(std::string text_line, ParsedPayloadSharedPtr& payload) 
 
 std::pair<NetflixCached::OpCode, std::pair<NetflixCached::Status, NetflixCached::ParsedPayloadSharedPtr>>
   Parser::parseRequest(const std::string network_buffer_input) {
-  //ParsedPayload payload;
   ParsedPayloadSharedPtr payload = std::make_shared<ParsedPayload>();
   NetflixCached::Status status = Status::ERROR;
   NetflixCached::OpCode op_code = OpCode::OK;
