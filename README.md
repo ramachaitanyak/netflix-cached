@@ -57,8 +57,14 @@ Tool used : `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux [memc
 Usage
 memcslap -s 127.0.0.1:11211 --test get/set
 
-10000 sets of 4096 bytes of unstrcutured data took 0.717 seconds approximately
+Experiment 1: 1 load generating client on the same node as the cache-server
+10000 sets of 4096 bytes of unstrcutured data took 0.608 seconds approximately
 10000 gets on those keys took 0.257 seconds approximately
+
+Experiment 2: 8 load generating concurrent clients on the same node as the cache-server
+79869 sets of 4096 bytes of unsctrcutred data took 1.6 seconds approximately
+
+To install memcslap on ubuntu please run `apt install libmemcached-tools`
 ```
 
 ## Compatibility, Development and Test Environment
