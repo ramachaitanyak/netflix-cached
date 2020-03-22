@@ -55,20 +55,22 @@ This project only supports text commands of maximum size 5120 bytes. The key can
 Tool used : `'memcslap' from package 'libmemcached-tools'` on Ubuntu Linux [memcslap](https://manpages.debian.org/jessie/libmemcached-tools/memcslap.1.en.html)
 ```
 Usage
-memcslap -s 127.0.0.1:11211 --test get/set
+memcslap -s 127.0.0.1:11211 --concurrency=[1-8] --test=[get/set]
 
 Experiment 1: 1 load generating client on the same node as the cache-server
 10000 sets of 4096 bytes of unstrcutured data took 0.608 seconds approximately
 10000 gets on those keys took 0.257 seconds approximately
 
 Experiment 2: 8 load generating concurrent clients on the same node as the cache-server
-79869 sets of 4096 bytes of unsctrcutred data took 1.6 seconds approximately
+79869 sets of 4096 bytes of unstructured data took 1.6 seconds approximately
+
+These experiments are conducted on a VM with 8 cores.
 
 To install memcslap on ubuntu please run `apt install libmemcached-tools`
 ```
 
 ## Compatibility, Development and Test Environment
-Linux Version
+Linux Version used for Development and Test
 ```
 Linux vm-2997079 4.4.0-143-generic #169-Ubuntu SMP Thu Feb 7 07:56:38 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
 ```
