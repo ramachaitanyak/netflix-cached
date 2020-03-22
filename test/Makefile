@@ -10,4 +10,4 @@ cache_client: cache_client.cc
 	$(CC) cache_client.cc -o test_cache_client -g $(CPPVERFLAG) $(LDFLAGS) $(WARNINGS)
 
 clean:
-	rm  test_cache_client
+	rm -Rf test_cache_client
