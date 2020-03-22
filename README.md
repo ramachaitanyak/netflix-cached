@@ -46,6 +46,8 @@ Usage
   - ./release/netflix_cache_server [optional-port]
 * Start the test client within 20 seconds on starting cache server
   - ./release/test_cache_client [optional-port]
+  
+Note: `./release/netflix_cache_server` is -O3 optimized and has produced better results in my performance measurements.
 ```
 
 ## Data Size Limits
