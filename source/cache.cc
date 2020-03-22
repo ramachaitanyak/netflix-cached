@@ -204,18 +204,11 @@ Cache::setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload) {
 
 void
 Cache::processRequest(const std::pair<int, std::string> request) {
-  // Pretend we are doing a lot of work
-  //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-  // Send a message to the connection
-  //std::string response = "Good talking to you\n";
-  //send(item.first, response.c_str(), response.size(), 0);
-
-  // Close the connection
-  //close(item.first);
-  //
+  // Default return status
   std::string return_status = "ERROR";
 
+  // Parser shared pointer
   ParserSharedPtr parse_object = std::make_shared<Parser>();
   std::pair<NetflixCached::OpCode,
     std::pair<NetflixCached::Status, NetflixCached::ParsedPayloadSharedPtr>>
