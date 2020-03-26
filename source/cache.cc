@@ -10,7 +10,7 @@
 namespace NetflixCached {
 
 void
-Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
+Cache::addToEvictQueue(size_t& q_size, Cache::HashNodeSharedPtr node) {
 
   if (evict_pq.size() < q_size) {
     // Add a shallow copy of the node
@@ -18,7 +18,7 @@ Cache::addToEvictQueue(size_t& q_size, Cache::HashNode* node) {
   } else {
     // Check the top of queue and if it is less than the current value
     // add remove the top element from queue and add to queue
-    Cache::HashNode *q_elem = evict_pq.top();
+    Cache::HashNodeSharedPtr q_elem = evict_pq.top();
     if (node->last_accessed_time < q_elem->last_accessed_time) {
       evict_pq.pop();
       // Add a shallow copy of the node
@@ -49,13 +49,13 @@ Cache::evictCache() {
       }
     }
 
-    // Evict the Cache::HashNode from the extent-store based on the items in
+    // Evict the Cache::HashNodeSharedPtr from the extent-store based on the items in
     // evict priority queue. This operation needs to be done under the lock
     while (evict_pq.size() != 0) {
-      Cache::HashNode *elem = evict_pq.top();
+      Cache::HashNodeSharedPtr elem = evict_pq.top();
       evict_pq.pop();
       // Compute hash and find the key in the extent-store
-      xxh::hash_t<32> key = xxh::xxhash<32>(elem->key);
+      xxh::hash_t<32> key = xxh::xxhash<32>(std::string(elem->key));
       // Lock the extent-store for look-up and delete
       {
         std::lock_guard<std::mutex> guard(extent_store_mutex);
@@ -64,15 +64,15 @@ Cache::evictCache() {
           // Check if this is the only HashNode for this key
           // In which case remove the key as well
           if (it->second.size() == 1) {
-            delete it->second[0];
             extent_store.erase(it);
           } else {
-            // Remove the single Cache::HashNode from the vector
+            // Remove the single Cache::HashNodeSharedPtr from the vector
             for (size_t i=0; i<it->second.size(); i++) {
-              if (elem->key.compare(it->second[i]->key) == 0) {
-                // CXX TODO!: Have an eviction mechanism to store nodes
-                delete it->second[i];
-                it->second.erase(it->second.begin()+(i-1));
+              if (elem->key != nullptr && it->second[i]->key != nullptr) {
+                if (std::string(elem->key).compare(std::string(it->second[i]->key)) == 0) {
+                  // CXX TODO!: Have an eviction mechanism to store nodes
+                  it->second.erase(it->second.begin()+(i));
+                }
               }
             }
           } // if/else
@@ -113,21 +113,27 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
     // Look up extent_store for the key
     auto it = Cache::extent_store.find(hash_key);
     if (it != extent_store.end()) {
-      // Found a value of type vector<Cache::HashNode*>
+      // Found a value of type vector<Cache::HashNodeSharedPtr>
       // If the size of the vector is not 1; there were
       // collisions, therefore we must perform additional
       // lookup on the vector.
       if (it->second.size() > 1) {
         for (std::size_t i=0; i<it->second.size(); i++) {
-          auto* hash_node = it->second[i];
+          Cache::HashNodeSharedPtr hash_node = it->second[i];
           // Safety check before dereferencing a pointer
           if (hash_node != nullptr) {
-            if (key.compare(hash_node->key) == 0) {
+            if (key.compare(std::string(hash_node->key)) == 0) {
+              // CXX! TODO: Update the last_accessed_time for the item inside the table
+              // only if it is not evicted
+              // eg: if (it->second[i] && it->second[i].get() != nullptr) {
+              //         it->second[i]->last_accessed_time = std::time(nullptr);
+              //     }
+              // This needs to be investigated with performance as we are reading the extent-store
+              // without any locks.
+
               // Found actual key, build appropriate response
-              // Update the last_accessed_time for the item inside the table
-              it->second[i]->last_accessed_time = std::time(nullptr);
               std::string collision_key_resp =
-                "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
+                "VALUE "+ std::string(hash_node->key) + " " + std::to_string(hash_node->flags) +
                 " " + std::to_string(hash_node->exptime) + " " +
                 std::to_string(hash_node->length) + "\r\n";
               std::string collision_key_val = hash_node->unstructured_data;
@@ -137,13 +143,13 @@ Cache::getKeyValues(int io_handle, NetflixCached::ParsedPayloadSharedPtr& payloa
         }
       } else {
         // There is only one value identified by this key
-        auto* hash_node = it->second[0];
+        Cache::HashNodeSharedPtr hash_node = it->second[0];
         // Safety check before dereferencing a pointer
         if (hash_node != nullptr) {
           // Update the last_access_time for the item inside the table
           it->second[0]->last_accessed_time = std::time(nullptr);
           std::string collision_key_resp =
-            "VALUE "+ hash_node->key + " " + std::to_string(hash_node->flags) +
+            "VALUE "+ std::string(hash_node->key) + " " + std::to_string(hash_node->flags) +
             " " + std::to_string(hash_node->exptime) + " " +
             std::to_string(hash_node->length) + "\r\n";
           std::string collision_key_val = hash_node->unstructured_data;
@@ -164,12 +170,18 @@ Cache::setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload) {
   total_sets++;
   // Allocate memory for a new HashNode before adding to the
   // extent-store
-  Cache::HashNode *node = new Cache::HashNode();
+  Cache::HashNodeSharedPtr node = std::make_shared<Cache::HashNode>();
   if (node == nullptr) {
     // This means that the server is out of memory
     return Status::SERVER_ERROR;
   }
-  node->key = payload->set_key;
+  //node->key = payload->set_key;
+  node->key = (char *)malloc(250);
+  if (node->key == nullptr) {
+    return Status::SERVER_ERROR;
+  }
+  size_t length = payload->set_key.copy(node->key, payload->set_key.length(), 0);
+  node->key[length] = '\0';
   node->flags = payload->flags;
   node->exptime = payload->exptime;
   node->length = payload->length;
@@ -186,7 +198,7 @@ Cache::setKeyValue(NetflixCached::ParsedPayloadSharedPtr& payload) {
       // This means that there is no such key found in the
       // extent store. Create a key value pair and insert into
       // extent store.
-      std::vector<Cache::HashNode *> node_values;
+      std::vector<Cache::HashNodeSharedPtr> node_values;
       node_values.push_back(node);
       extent_store.insert(make_pair(key, node_values));
     } else {

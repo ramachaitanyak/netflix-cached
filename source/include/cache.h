@@ -60,9 +60,12 @@ private:
 
   class HashNode {
   public:
+    //HashNode() {
+    //  key = (char *)malloc(250);
+    //}
     ~HashNode() = default;
     // The key
-    std::string key;
+    char* key;
 
     // Unused flags
     uint32_t flags;
@@ -80,8 +83,9 @@ private:
     // This is indicated in seconds since epoch
     time_t last_accessed_time;
   }; // class HashNode
+  using HashNodeSharedPtr = std::shared_ptr<HashNode>;
 
-  void addToEvictQueue(size_t& queue_size, Cache::HashNode* node);
+  void addToEvictQueue(size_t& queue_size, HashNodeSharedPtr node);
 
   // Actual data-structure to hold all keys in memory. This is based on
   // the standard library and uses std::hash function on the key, thus by
@@ -90,7 +94,7 @@ private:
   // a list of HashNodes to handle collisions if any.
   // The problem of collisions here is solved by separate chaining instead of
   // using cuckoo hash or open-addressing
-  std::unordered_map<xxh::hash_t<32>, std::vector<Cache::HashNode *>> extent_store;
+  std::unordered_map<xxh::hash_t<32>, std::vector<HashNodeSharedPtr>> extent_store;
 
   // Mutex to protect the extent_store
   std::mutex extent_store_mutex;
@@ -100,11 +104,11 @@ private:
   //  return left->last_accessed_time < right->last_accessed_time;
  // };
   struct Cmp {
-    bool operator()(Cache::HashNode* lhs, Cache::HashNode* rhs) {
+    bool operator()(Cache::HashNodeSharedPtr lhs, Cache::HashNodeSharedPtr rhs) {
       return lhs->last_accessed_time < rhs->last_accessed_time;
     }
   };
-  std::priority_queue<Cache::HashNode*, std::vector<Cache::HashNode*>, Cmp > evict_pq;
+  std::priority_queue<Cache::HashNodeSharedPtr, std::vector<Cache::HashNodeSharedPtr>, Cmp > evict_pq;
 
   // Variable to indicate graceful shutdown from the server
   bool done;
